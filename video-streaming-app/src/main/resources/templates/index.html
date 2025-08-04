@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Streaming App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+      }
+      form {
+        margin-bottom: 20px;
+      }
+      input[type="file"] {
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #uploadStatus {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background-color: #cfe2ff;
+        color: #084298;
+        border: 1px solid #b6d4fe;
+      }
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Upload Your Video</h1>
+
+      <form id="uploadForm">
+        <input
+          type="file"
+          id="videoFile"
+          name="file"
+          accept="video/*"
+          required
+        />
+        <button id="submitButton" type="submit">Upload Video</button>
+      </form>
+
+      <div id="uploadStatus" class="info">Waiting to upload...</div>
+
+      <h2>View Uploaded Video</h2>
+      <p>Enter a public ID to view a video:</p>
+      <input
+        type="text"
+        id="publicIdInput"
+        placeholder="e.g., my_uploaded_video"
+      />
+      <button onclick="viewVideo()">View Video</button>
+
+      <script>
+        document
+          .getElementById("uploadForm")
+          .addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const fileInput = document.getElementById("videoFile");
+            const statusDiv = document.getElementById("uploadStatus");
+            const submitButton = document.getElementById("submitButton").disabled = true; // Disable button during upload
+
+            if (fileInput.files.length === 0) {
+              statusDiv.className = "error";
+              statusDiv.textContent = "Please select a file to upload.";
+              return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            statusDiv.className = "info";
+            statusDiv.textContent = "Uploading... Please wait.";
+
+            try {
+              const response = await fetch("/videos/upload", {
+                method: "POST",
+                body: formData,
+              });
+
+              const text = await response.text();
+
+              if (response.ok) {
+                statusDiv.className = "success";
+                statusDiv.innerHTML =
+                  text +
+                  '<br>You can now view it using the public ID below or <a href="/player?publicId=' +
+                  extractPublicId(text) +
+                  '">Click here to play</a>.';
+                document.getElementById("publicIdInput").value =
+                  extractPublicId(text);
+              } else {
+                statusDiv.className = "error";
+                statusDiv.textContent = "Upload failed: " + text;
+              }
+            } catch (error) {
+              statusDiv.className = "error";
+              statusDiv.textContent =
+                "An error occurred during upload: " + error.message;
+            }
+          });
+
+        function extractPublicId(text) {
+          const match = text.match(/Public ID: ([\w\/]+)/);
+          return match ? match[1] : "";
+        }
+
+        function viewVideo() {
+          const publicId = document.getElementById("publicIdInput").value;
+          if (publicId) {
+            window.location.href = `/player?publicId=${publicId}`;
+          } else {
+            alert("Please enter a Public ID to view the video.");
+          }
+        }
+      </script>
+    </div>
+  </body>
+</html>

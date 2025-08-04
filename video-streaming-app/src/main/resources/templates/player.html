@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cloudinary Video Player</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        text-align: center;
+      }
+      .video-container {
+        max-width: 800px;
+        margin: 20px auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .info {
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #555;
+      }
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .cld-video-player {
+        width: 100%;
+        height: auto;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/cloudinary-video-player@3.0.2/dist/cld-video-player.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <h1>Video Playback with Cloudinary Player</h1>
+
+    <div th:if="${publicId}">
+      <div class="video-container">
+        <video
+          id="my-video-player"
+          controls
+          autoplay
+          class="cld-video-player"
+        ></video>
+      </div>
+      <p class="info">Playing video: <span th:text="${publicId}"></span></p>
+    </div>
+    <div th:unless="${publicId}">
+      <p>No video selected for playback or video not found.</p>
+    </div>
+
+    <p><a href="/">Go back to upload</a></p>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/cloudinary-video-player@3.0.2/dist/cld-video-player.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script th:if="${publicId}">
+      const cloudName = "cloudinarymich"; // Replace with your actual Cloudinary cloud name
+
+      // Initialize Cloudinary with your cloud name
+      const cld = cloudinary.Cloudinary.new({ cloud_name: cloudName });
+
+      // Initialize the Cloudinary video player on the video element
+      const player = cld.videoPlayer("my-video-player", {
+        controls: true,
+        fluid: true,
+        adaptiveStreaming: true
+      });
+
+      // Set the video source using its public ID from the Thymeleaf model
+      const publicId = "[[${publicId}]]";
+      player.source(publicId, { sourceTypes: ['hls']});
+    </script>
+  </body>
+</html>
